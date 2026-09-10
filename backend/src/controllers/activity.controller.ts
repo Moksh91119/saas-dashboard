@@ -22,6 +22,7 @@ function getId(req: Request, res: Response): string | null {
 
 export async function listActivitiesController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
@@ -41,7 +42,7 @@ export async function listActivitiesController(req: Request, res: Response) {
         ? req.query.userId.trim()
         : undefined;
 
-    const result = await getActivities({
+    const result = await getActivities(organizationId, {
       page,
       limit,
       action,
@@ -65,13 +66,14 @@ export async function listActivitiesController(req: Request, res: Response) {
 
 export async function getActivityController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const activity = await getActivityById(id);
+    const activity = await getActivityById(organizationId, id);
 
     res.json({
       success: true,

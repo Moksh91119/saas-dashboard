@@ -1,35 +1,17 @@
 import prisma from "../config/prisma.js";
 
-const ORGANIZATION_SLUG = "saasflow";
-
-async function getOrganizationId() {
-  const organization = await prisma.organization.findUnique({
-    where: {
-      slug: ORGANIZATION_SLUG,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (!organization) {
-    throw new Error("Organization not found");
-  }
-
-  return organization.id;
-}
-
-export async function getCustomers(params: {
-  page: number;
-  limit: number;
-  search?: string;
-  status?: "ACTIVE" | "INACTIVE";
-  country?: string;
-  sortBy?: "name" | "joinedAt" | "createdAt";
-  sortOrder?: "asc" | "desc";
-}) {
-  const organizationId = await getOrganizationId();
-
+export async function getCustomers(
+  organizationId: string,
+  params: {
+    page: number;
+    limit: number;
+    search?: string;
+    status?: "ACTIVE" | "INACTIVE";
+    country?: string;
+    sortBy?: "name" | "joinedAt" | "createdAt";
+    sortOrder?: "asc" | "desc";
+  },
+) {
   const {
     page,
     limit,
@@ -119,9 +101,7 @@ export async function getCustomers(params: {
   };
 }
 
-export async function getCustomerById(id: string) {
-  const organizationId = await getOrganizationId();
-
+export async function getCustomerById(organizationId: string, id: string) {
   const customer = await prisma.customer.findFirst({
     where: {
       id,
@@ -153,14 +133,15 @@ export async function getCustomerById(id: string) {
   return customer;
 }
 
-export async function createCustomer(data: {
-  name: string;
-  email: string;
-  companyName?: string;
-  country?: string;
-}) {
-  const organizationId = await getOrganizationId();
-
+export async function createCustomer(
+  organizationId: string,
+  data: {
+    name: string;
+    email: string;
+    companyName?: string;
+    country?: string;
+  },
+) {
   const existingCustomer = await prisma.customer.findFirst({
     where: {
       organizationId,
@@ -187,6 +168,7 @@ export async function createCustomer(data: {
 }
 
 export async function updateCustomer(
+  organizationId: string,
   id: string,
   data: {
     name?: string;
@@ -196,8 +178,6 @@ export async function updateCustomer(
     status?: "ACTIVE" | "INACTIVE";
   },
 ) {
-  const organizationId = await getOrganizationId();
-
   const customer = await prisma.customer.findFirst({
     where: {
       id,
@@ -235,9 +215,7 @@ export async function updateCustomer(
   });
 }
 
-export async function deleteCustomer(id: string) {
-  const organizationId = await getOrganizationId();
-
+export async function deleteCustomer(organizationId: string, id: string) {
   const customer = await prisma.customer.findFirst({
     where: {
       id,

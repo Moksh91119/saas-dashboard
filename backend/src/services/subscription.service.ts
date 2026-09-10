@@ -1,11 +1,9 @@
 import prisma from "../config/prisma.js";
 
-const ORGANIZATION_SLUG = "saasflow";
-
-async function getOrganizationId() {
+export async function getSubscriptions(organizationId: string) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
     select: {
       id: true,
@@ -15,12 +13,6 @@ async function getOrganizationId() {
   if (!organization) {
     throw new Error("Organization not found");
   }
-
-  return organization.id;
-}
-
-export async function getSubscriptions() {
-  const organizationId = await getOrganizationId();
 
   return prisma.subscription.findMany({
     where: {
@@ -50,8 +42,19 @@ export async function getSubscriptions() {
   });
 }
 
-export async function getSubscriptionById(id: string) {
-  const organizationId = await getOrganizationId();
+export async function getSubscriptionById(organizationId: string, id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const subscription = await prisma.subscription.findFirst({
     where: {
@@ -91,12 +94,26 @@ export async function getSubscriptionById(id: string) {
   return subscription;
 }
 
-export async function createSubscription(data: {
-  customerId: string;
-  planId: string;
-  status?: "TRIAL" | "ACTIVE";
-}) {
-  const organizationId = await getOrganizationId();
+export async function createSubscription(
+  organizationId: string,
+  data: {
+    customerId: string;
+    planId: string;
+    status?: "TRIAL" | "ACTIVE";
+  },
+) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const [customer, plan, existingSubscription] = await Promise.all([
     prisma.customer.findFirst({
@@ -182,8 +199,23 @@ export async function createSubscription(data: {
   });
 }
 
-export async function changeSubscriptionPlan(id: string, newPlanId: string) {
-  const organizationId = await getOrganizationId();
+export async function changeSubscriptionPlan(
+  organizationId: string,
+  id: string,
+  newPlanId: string,
+) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const subscription = await prisma.subscription.findFirst({
     where: {
@@ -247,8 +279,19 @@ export async function changeSubscriptionPlan(id: string, newPlanId: string) {
   });
 }
 
-export async function cancelSubscription(id: string) {
-  const organizationId = await getOrganizationId();
+export async function cancelSubscription(organizationId: string, id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const subscription = await prisma.subscription.findFirst({
     where: {

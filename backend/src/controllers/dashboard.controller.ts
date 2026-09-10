@@ -7,16 +7,14 @@ import {
   getSubscriptionAnalytics,
 } from "../services/dashboard.service.js";
 
-export async function getDashboardOverviewController(
-  _req: Request,
-  res: Response,
-) {
+export async function getOverview(req: Request, res: Response) {
   try {
-    const dashboard = await getDashboardOverview();
+    const organizationId = req.user!.organizationId;
+    const data = await getDashboardOverview(organizationId);
 
     res.json({
       success: true,
-      data: dashboard,
+      data,
     });
   } catch (error) {
     console.error("Dashboard error:", error);
@@ -28,11 +26,9 @@ export async function getDashboardOverviewController(
   }
 }
 
-export async function getDashboardAnalyticsController(
-  req: Request,
-  res: Response,
-) {
+export async function getAnalytics(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const requestedMonths = Number(req.query.months ?? 6);
 
     const months = Math.min(
@@ -42,10 +38,10 @@ export async function getDashboardAnalyticsController(
 
     const [revenueTrend, customerTrend, planAnalytics, subscriptionAnalytics] =
       await Promise.all([
-        getRevenueTrend(months),
-        getCustomerTrend(months),
-        getPlanAnalytics(),
-        getSubscriptionAnalytics(),
+        getRevenueTrend(organizationId, months),
+        getCustomerTrend(organizationId, months),
+        getPlanAnalytics(organizationId),
+        getSubscriptionAnalytics(organizationId),
       ]);
 
     res.json({

@@ -1,5 +1,5 @@
 import { Router } from "express";
-
+import { authenticate } from "../middlewares/auth.middleware.js";
 import {
   createPlanController,
   deactivatePlanController,
@@ -9,6 +9,8 @@ import {
 } from "../controllers/plan.controller.js";
 
 const router = Router();
+
+router.use(authenticate);
 
 router.get("/", listPlansController);
 

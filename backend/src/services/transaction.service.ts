@@ -1,11 +1,19 @@
 import prisma from "../config/prisma.js";
 
-const ORGANIZATION_SLUG = "saasflow";
-
-async function getOrganizationId() {
+export async function getTransactions(
+  organizationId: string,
+  params: {
+    page: number;
+    limit: number;
+    status?: "SUCCEEDED" | "PENDING" | "FAILED";
+    type?: "CHARGE" | "REFUND" | "CREDIT";
+    customerId?: string;
+    search?: string;
+  },
+) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
     select: {
       id: true,
@@ -15,19 +23,6 @@ async function getOrganizationId() {
   if (!organization) {
     throw new Error("Organization not found");
   }
-
-  return organization.id;
-}
-
-export async function getTransactions(params: {
-  page: number;
-  limit: number;
-  status?: "SUCCEEDED" | "PENDING" | "FAILED";
-  type?: "CHARGE" | "REFUND" | "CREDIT";
-  customerId?: string;
-  search?: string;
-}) {
-  const organizationId = await getOrganizationId();
 
   const { page, limit, status, type, customerId, search } = params;
 
@@ -139,8 +134,19 @@ export async function getTransactions(params: {
   };
 }
 
-export async function getTransactionById(id: string) {
-  const organizationId = await getOrganizationId();
+export async function getTransactionById(organizationId: string, id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const transaction = await prisma.transaction.findFirst({
     where: {
@@ -166,17 +172,31 @@ export async function getTransactionById(id: string) {
   return transaction;
 }
 
-export async function createTransaction(data: {
-  customerId: string;
-  subscriptionId?: string;
-  amount: number;
-  currency?: string;
-  type: "CHARGE" | "REFUND" | "CREDIT";
-  status: "SUCCEEDED" | "PENDING" | "FAILED";
-  description?: string;
-  occurredAt?: Date;
-}) {
-  const organizationId = await getOrganizationId();
+export async function createTransaction(
+  organizationId: string,
+  data: {
+    customerId: string;
+    subscriptionId?: string;
+    amount: number;
+    currency?: string;
+    type: "CHARGE" | "REFUND" | "CREDIT";
+    status: "SUCCEEDED" | "PENDING" | "FAILED";
+    description?: string;
+    occurredAt?: Date;
+  },
+) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const customer = await prisma.customer.findFirst({
     where: {

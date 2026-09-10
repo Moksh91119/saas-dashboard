@@ -1,11 +1,9 @@
 import prisma from "../config/prisma.js";
 
-const ORGANIZATION_SLUG = "saasflow";
-
-async function getOrganizationId() {
+export async function getPlans(organizationId: string) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
     select: {
       id: true,
@@ -15,12 +13,6 @@ async function getOrganizationId() {
   if (!organization) {
     throw new Error("Organization not found");
   }
-
-  return organization.id;
-}
-
-export async function getPlans() {
-  const organizationId = await getOrganizationId();
 
   return prisma.plan.findMany({
     where: {
@@ -39,8 +31,19 @@ export async function getPlans() {
   });
 }
 
-export async function getPlanById(id: string) {
-  const organizationId = await getOrganizationId();
+export async function getPlanById(organizationId: string, id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const plan = await prisma.plan.findFirst({
     where: {
@@ -63,14 +66,28 @@ export async function getPlanById(id: string) {
   return plan;
 }
 
-export async function createPlan(data: {
-  name: string;
-  slug: string;
-  description?: string;
-  price: number;
-  billingInterval: "MONTHLY" | "YEARLY";
-}) {
-  const organizationId = await getOrganizationId();
+export async function createPlan(
+  organizationId: string,
+  data: {
+    name: string;
+    slug: string;
+    description?: string;
+    price: number;
+    billingInterval: "MONTHLY" | "YEARLY";
+  },
+) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const existingPlan = await prisma.plan.findFirst({
     where: {
@@ -97,6 +114,7 @@ export async function createPlan(data: {
 }
 
 export async function updatePlan(
+  organizationId: string,
   id: string,
   data: {
     name?: string;
@@ -107,7 +125,18 @@ export async function updatePlan(
     isActive?: boolean;
   },
 ) {
-  const organizationId = await getOrganizationId();
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const plan = await prisma.plan.findFirst({
     where: {
@@ -144,8 +173,19 @@ export async function updatePlan(
   });
 }
 
-export async function deactivatePlan(id: string) {
-  const organizationId = await getOrganizationId();
+export async function deactivatePlan(organizationId: string, id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const plan = await prisma.plan.findFirst({
     where: {

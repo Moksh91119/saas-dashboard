@@ -1,11 +1,18 @@
 import prisma from "../config/prisma.js";
 
-const ORGANIZATION_SLUG = "saasflow";
-
-async function getOrganizationId() {
+export async function getActivities(
+  organizationId: string,
+  params: {
+    page: number;
+    limit: number;
+    action?: string;
+    entityType?: string;
+    userId?: string;
+  },
+) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
     select: {
       id: true,
@@ -15,18 +22,6 @@ async function getOrganizationId() {
   if (!organization) {
     throw new Error("Organization not found");
   }
-
-  return organization.id;
-}
-
-export async function getActivities(params: {
-  page: number;
-  limit: number;
-  action?: string;
-  entityType?: string;
-  userId?: string;
-}) {
-  const organizationId = await getOrganizationId();
 
   const { page, limit, action, entityType, userId } = params;
 
@@ -97,8 +92,19 @@ export async function getActivities(params: {
   };
 }
 
-export async function getActivityById(id: string) {
-  const organizationId = await getOrganizationId();
+export async function getActivityById(organizationId: string, id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
 
   const activity = await prisma.activityLog.findFirst({
     where: {

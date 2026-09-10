@@ -53,7 +53,7 @@ export async function listCustomersController(req: Request, res: Response) {
 
     const sortOrder = req.query.sortOrder === "asc" ? "asc" : "desc";
 
-    const result = await getCustomers({
+    const result = await getCustomers(req.user!.organizationId, {
       page,
       limit,
       search,
@@ -85,7 +85,7 @@ export async function getCustomerController(req: Request, res: Response) {
       return;
     }
 
-    const customer = await getCustomerById(id);
+    const customer = await getCustomerById(req.user!.organizationId, id);
 
     res.json({
       success: true,
@@ -116,7 +116,7 @@ export async function createCustomerController(req: Request, res: Response) {
       return;
     }
 
-    const customer = await createCustomer({
+    const customer = await createCustomer(req.user!.organizationId, {
       name,
       email,
       companyName,
@@ -148,7 +148,11 @@ export async function updateCustomerController(req: Request, res: Response) {
       return;
     }
 
-    const customer = await updateCustomer(id, req.body);
+    const customer = await updateCustomer(
+      req.user!.organizationId,
+      id,
+      req.body,
+    );
 
     res.json({
       success: true,
@@ -180,7 +184,7 @@ export async function deleteCustomerController(req: Request, res: Response) {
       return;
     }
 
-    await deleteCustomer(id);
+    await deleteCustomer(req.user!.organizationId, id);
 
     res.status(204).send();
   } catch (error) {

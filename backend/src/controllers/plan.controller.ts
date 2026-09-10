@@ -23,9 +23,10 @@ function getId(req: Request, res: Response): string | null {
   return id;
 }
 
-export async function listPlansController(_req: Request, res: Response) {
+export async function listPlansController(req: Request, res: Response) {
   try {
-    const plans = await getPlans();
+    const organizationId = req.user!.organizationId;
+    const plans = await getPlans(organizationId);
 
     res.json({
       success: true,
@@ -43,13 +44,14 @@ export async function listPlansController(_req: Request, res: Response) {
 
 export async function getPlanController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const plan = await getPlanById(id);
+    const plan = await getPlanById(organizationId, id);
 
     res.json({
       success: true,
@@ -68,6 +70,7 @@ export async function getPlanController(req: Request, res: Response) {
 
 export async function createPlanController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const { name, slug, description, price, billingInterval } = req.body;
 
     if (!name || !slug || price === undefined || !billingInterval) {
@@ -97,7 +100,7 @@ export async function createPlanController(req: Request, res: Response) {
       return;
     }
 
-    const plan = await createPlan({
+    const plan = await createPlan(organizationId, {
       name,
       slug,
       description,
@@ -122,13 +125,14 @@ export async function createPlanController(req: Request, res: Response) {
 
 export async function updatePlanController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const plan = await updatePlan(id, req.body);
+    const plan = await updatePlan(organizationId, id, req.body);
 
     res.json({
       success: true,
@@ -154,13 +158,14 @@ export async function updatePlanController(req: Request, res: Response) {
 
 export async function deactivatePlanController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const plan = await deactivatePlan(id);
+    const plan = await deactivatePlan(organizationId, id);
 
     res.json({
       success: true,

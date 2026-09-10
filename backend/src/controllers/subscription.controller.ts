@@ -23,12 +23,10 @@ function getId(req: Request, res: Response): string | null {
   return id;
 }
 
-export async function listSubscriptionsController(
-  _req: Request,
-  res: Response,
-) {
+export async function listSubscriptionsController(req: Request, res: Response) {
   try {
-    const subscriptions = await getSubscriptions();
+    const organizationId = req.user!.organizationId;
+    const subscriptions = await getSubscriptions(organizationId);
 
     res.json({
       success: true,
@@ -46,13 +44,14 @@ export async function listSubscriptionsController(
 
 export async function getSubscriptionController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const subscription = await getSubscriptionById(id);
+    const subscription = await getSubscriptionById(organizationId, id);
 
     res.json({
       success: true,
@@ -74,6 +73,7 @@ export async function createSubscriptionController(
   res: Response,
 ) {
   try {
+    const organizationId = req.user!.organizationId;
     const { customerId, planId, status } = req.body;
 
     if (!customerId || !planId) {
@@ -94,7 +94,7 @@ export async function createSubscriptionController(
       return;
     }
 
-    const subscription = await createSubscription({
+    const subscription = await createSubscription(organizationId, {
       customerId,
       planId,
       status,
@@ -126,6 +126,7 @@ export async function changeSubscriptionPlanController(
   res: Response,
 ) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
@@ -143,7 +144,11 @@ export async function changeSubscriptionPlanController(
       return;
     }
 
-    const subscription = await changeSubscriptionPlan(id, planId);
+    const subscription = await changeSubscriptionPlan(
+      organizationId,
+      id,
+      planId,
+    );
 
     res.json({
       success: true,
@@ -172,13 +177,14 @@ export async function cancelSubscriptionController(
   res: Response,
 ) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const subscription = await cancelSubscription(id);
+    const subscription = await cancelSubscription(organizationId, id);
 
     res.json({
       success: true,

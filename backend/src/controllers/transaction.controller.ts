@@ -23,6 +23,7 @@ function getId(req: Request, res: Response): string | null {
 
 export async function listTransactionsController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
@@ -51,7 +52,7 @@ export async function listTransactionsController(req: Request, res: Response) {
         ? req.query.type
         : undefined;
 
-    const result = await getTransactions({
+    const result = await getTransactions(organizationId, {
       page,
       limit,
       status,
@@ -76,13 +77,14 @@ export async function listTransactionsController(req: Request, res: Response) {
 
 export async function getTransactionController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const id = getId(req, res);
 
     if (!id) {
       return;
     }
 
-    const transaction = await getTransactionById(id);
+    const transaction = await getTransactionById(organizationId, id);
 
     res.json({
       success: true,
@@ -101,6 +103,7 @@ export async function getTransactionController(req: Request, res: Response) {
 
 export async function createTransactionController(req: Request, res: Response) {
   try {
+    const organizationId = req.user!.organizationId;
     const {
       customerId,
       subscriptionId,
@@ -148,7 +151,7 @@ export async function createTransactionController(req: Request, res: Response) {
       return;
     }
 
-    const transaction = await createTransaction({
+    const transaction = await createTransaction(organizationId, {
       customerId,
       subscriptionId,
       amount,

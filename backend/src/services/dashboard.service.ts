@@ -1,19 +1,15 @@
 import prisma from "../config/prisma.js";
 
-const ORGANIZATION_SLUG = "saasflow";
-
-export async function getDashboardOverview() {
+export async function getDashboardOverview(organizationId: string) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
   });
 
   if (!organization) {
     throw new Error("Organization not found");
   }
-
-  const organizationId = organization.id;
 
   const [
     customers,
@@ -130,10 +126,10 @@ export async function getDashboardOverview() {
   };
 }
 
-export async function getRevenueTrend(months = 6) {
+export async function getRevenueTrend(organizationId: string, months = 6) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
   });
 
@@ -151,7 +147,7 @@ export async function getRevenueTrend(months = 6) {
 
   const transactions = await prisma.transaction.findMany({
     where: {
-      organizationId: organization.id,
+      organizationId: organizationId,
       status: "SUCCEEDED",
       type: "CHARGE",
       occurredAt: {
@@ -199,10 +195,10 @@ export async function getRevenueTrend(months = 6) {
   return result;
 }
 
-export async function getCustomerTrend(months = 6) {
+export async function getCustomerTrend(organizationId: string, months = 6) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
   });
 
@@ -225,7 +221,7 @@ export async function getCustomerTrend(months = 6) {
 
     const customerCount = await prisma.customer.count({
       where: {
-        organizationId: organization.id,
+        organizationId: organizationId,
         deletedAt: null,
         joinedAt: {
           lt: nextMonth,
@@ -245,10 +241,10 @@ export async function getCustomerTrend(months = 6) {
   return result;
 }
 
-export async function getPlanAnalytics() {
+export async function getPlanAnalytics(organizationId: string) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
   });
 
@@ -258,7 +254,7 @@ export async function getPlanAnalytics() {
 
   const plans = await prisma.plan.findMany({
     where: {
-      organizationId: organization.id,
+      organizationId: organizationId,
     },
     include: {
       subscriptions: {
@@ -287,10 +283,10 @@ export async function getPlanAnalytics() {
   }));
 }
 
-export async function getSubscriptionAnalytics() {
+export async function getSubscriptionAnalytics(organizationId: string) {
   const organization = await prisma.organization.findUnique({
     where: {
-      slug: ORGANIZATION_SLUG,
+      id: organizationId,
     },
   });
 
@@ -301,7 +297,7 @@ export async function getSubscriptionAnalytics() {
   const statuses = await prisma.subscription.groupBy({
     by: ["status"],
     where: {
-      organizationId: organization.id,
+      organizationId: organizationId,
     },
     _count: {
       id: true,

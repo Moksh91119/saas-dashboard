@@ -8,7 +8,11 @@ import {
   listSubscriptionsController,
 } from "../controllers/subscription.controller.js";
 
+import { authenticate } from "../middlewares/auth.middleware.js";
+
 const router = Router();
+
+router.use(authenticate);
 
 router.get("/", listSubscriptionsController);
 
