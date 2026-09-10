@@ -129,3 +129,187 @@ export async function getDashboardOverview() {
     recentActivity,
   };
 }
+
+export async function getRevenueTrend(months = 6) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      slug: ORGANIZATION_SLUG,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
+
+  const now = new Date();
+
+  const startDate = new Date(
+    now.getFullYear(),
+    now.getMonth() - (months - 1),
+    1,
+  );
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      organizationId: organization.id,
+      status: "SUCCEEDED",
+      type: "CHARGE",
+      occurredAt: {
+        gte: startDate,
+      },
+    },
+    select: {
+      amount: true,
+      occurredAt: true,
+    },
+    orderBy: {
+      occurredAt: "asc",
+    },
+  });
+
+  const result = [];
+
+  for (let i = 0; i < months; i++) {
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - (months - 1 - i),
+      1,
+    );
+
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    const revenue = transactions
+      .filter((transaction) => {
+        const transactionDate = transaction.occurredAt;
+
+        return (
+          transactionDate.getFullYear() === year &&
+          transactionDate.getMonth() === month
+        );
+      })
+      .reduce((total, transaction) => total + Number(transaction.amount), 0);
+
+    result.push({
+      month: `${year}-${String(month + 1).padStart(2, "0")}`,
+      revenue,
+    });
+  }
+
+  return result;
+}
+
+export async function getCustomerTrend(months = 6) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      slug: ORGANIZATION_SLUG,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
+
+  const now = new Date();
+
+  const result = [];
+
+  for (let i = 0; i < months; i++) {
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - (months - 1 - i),
+      1,
+    );
+
+    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+    const customerCount = await prisma.customer.count({
+      where: {
+        organizationId: organization.id,
+        deletedAt: null,
+        joinedAt: {
+          lt: nextMonth,
+        },
+      },
+    });
+
+    result.push({
+      month: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0",
+      )}`,
+      customers: customerCount,
+    });
+  }
+
+  return result;
+}
+
+export async function getPlanAnalytics() {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      slug: ORGANIZATION_SLUG,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
+
+  const plans = await prisma.plan.findMany({
+    where: {
+      organizationId: organization.id,
+    },
+    include: {
+      subscriptions: {
+        where: {
+          status: {
+            in: ["ACTIVE", "TRIAL"],
+          },
+        },
+      },
+    },
+    orderBy: {
+      price: "asc",
+    },
+  });
+
+  return plans.map((plan) => ({
+    id: plan.id,
+    name: plan.name,
+    price: Number(plan.price),
+    billingInterval: plan.billingInterval,
+    activeSubscriptions: plan.subscriptions.length,
+    estimatedMrr:
+      plan.billingInterval === "MONTHLY"
+        ? Number(plan.price) * plan.subscriptions.length
+        : (Number(plan.price) / 12) * plan.subscriptions.length,
+  }));
+}
+
+export async function getSubscriptionAnalytics() {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      slug: ORGANIZATION_SLUG,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
+
+  const statuses = await prisma.subscription.groupBy({
+    by: ["status"],
+    where: {
+      organizationId: organization.id,
+    },
+    _count: {
+      id: true,
+    },
+  });
+
+  return statuses.map((item) => ({
+    status: item.status,
+    count: item._count.id,
+  }));
+}
