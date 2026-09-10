@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import prisma from "./config/prisma.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import customerRoutes from "./routes/customer.routes.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(
 app.use(express.json());
 
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/customers", customerRoutes);
 
 app.get("/api/health", async (_req, res) => {
   try {
