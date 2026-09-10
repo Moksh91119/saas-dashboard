@@ -5,6 +5,7 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
 import planRoutes from "./routes/plan.routes.js";
 import subscriptionRoutes from "./routes/subscription.routes.js";
+import transactionRoutes from "./routes/transaction.routes.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 app.get("/api/health", async (_req, res) => {
   try {
