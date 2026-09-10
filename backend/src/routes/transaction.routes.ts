@@ -7,6 +7,7 @@ import {
 } from "../controllers/transaction.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 
 const router = Router();
 
@@ -16,6 +17,6 @@ router.get("/", listTransactionsController);
 
 router.get("/:id", getTransactionController);
 
-router.post("/", createTransactionController);
+router.post("/", requireRole("ADMIN"), createTransactionController);
 
 export default router;

@@ -8,6 +8,8 @@ import {
   listSubscriptionsController,
 } from "../controllers/subscription.controller.js";
 
+import { requireRole } from "../middlewares/role.middleware.js";
+
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -18,10 +20,14 @@ router.get("/", listSubscriptionsController);
 
 router.get("/:id", getSubscriptionController);
 
-router.post("/", createSubscriptionController);
+router.post("/", requireRole("ADMIN"), createSubscriptionController);
 
-router.patch("/:id/plan", changeSubscriptionPlanController);
+router.patch(
+  "/:id/plan",
+  requireRole("ADMIN"),
+  changeSubscriptionPlanController,
+);
 
-router.post("/:id/cancel", cancelSubscriptionController);
+router.post("/:id/cancel", requireRole("ADMIN"), cancelSubscriptionController);
 
 export default router;

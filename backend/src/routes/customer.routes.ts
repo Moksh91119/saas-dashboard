@@ -8,6 +8,7 @@ import {
   updateCustomerController,
 } from "../controllers/customer.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 
 const router = Router();
 
@@ -21,6 +22,6 @@ router.post("/", createCustomerController);
 
 router.patch("/:id", updateCustomerController);
 
-router.delete("/:id", deleteCustomerController);
+router.delete("/:id", requireRole("ADMIN"), deleteCustomerController);
 
 export default router;

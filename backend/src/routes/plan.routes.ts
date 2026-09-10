@@ -7,6 +7,7 @@ import {
   listPlansController,
   updatePlanController,
 } from "../controllers/plan.controller.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 
 const router = Router();
 
@@ -16,10 +17,10 @@ router.get("/", listPlansController);
 
 router.get("/:id", getPlanController);
 
-router.post("/", createPlanController);
+router.post("/", requireRole("ADMIN"), createPlanController);
 
-router.patch("/:id", updatePlanController);
+router.patch("/:id", requireRole("ADMIN"), updatePlanController);
 
-router.delete("/:id", deactivatePlanController);
+router.delete("/:id", requireRole("ADMIN"), deactivatePlanController);
 
 export default router;
