@@ -8,6 +8,11 @@ import {
   updatePlanController,
 } from "../controllers/plan.controller.js";
 import { requireRole } from "../middlewares/role.middleware.js";
+import { validateBody } from "../middlewares/validate.middleware.js";
+import {
+  createPlanSchema,
+  updatePlanSchema,
+} from "../validators/plan.validator.js";
 
 const router = Router();
 
@@ -17,9 +22,19 @@ router.get("/", listPlansController);
 
 router.get("/:id", getPlanController);
 
-router.post("/", requireRole("ADMIN"), createPlanController);
+router.post(
+  "/",
+  requireRole("ADMIN"),
+  validateBody(createPlanSchema),
+  createPlanController,
+);
 
-router.patch("/:id", requireRole("ADMIN"), updatePlanController);
+router.patch(
+  "/:id",
+  requireRole("ADMIN"),
+  validateBody(updatePlanSchema),
+  updatePlanController,
+);
 
 router.delete("/:id", requireRole("ADMIN"), deactivatePlanController);
 
