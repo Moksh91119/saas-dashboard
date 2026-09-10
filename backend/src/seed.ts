@@ -388,12 +388,30 @@ async function main() {
   // --------------------------------------------------
 
   const activities = [
-    "Created customer account",
-    "Updated subscription",
-    "Created transaction",
-    "Changed subscription plan",
-    "Updated customer information",
-    "Cancelled subscription",
+    {
+      action: "CUSTOMER_CREATED",
+      description: "Created customer account",
+    },
+    {
+      action: "SUBSCRIPTION_UPDATED",
+      description: "Updated subscription",
+    },
+    {
+      action: "TRANSACTION_CREATED",
+      description: "Created transaction",
+    },
+    {
+      action: "SUBSCRIPTION_PLAN_CHANGED",
+      description: "Changed subscription plan",
+    },
+    {
+      action: "CUSTOMER_UPDATED",
+      description: "Updated customer information",
+    },
+    {
+      action: "SUBSCRIPTION_CANCELLED",
+      description: "Cancelled subscription",
+    },
   ];
 
   for (let i = 0; i < 20; i++) {
@@ -403,10 +421,10 @@ async function main() {
       data: {
         organizationId: organization.id,
         userId: i % 2 === 0 ? admin.id : member.id,
-        action: activities[i % activities.length],
+        action: activities[i % activities.length].action,
+        description: `${activities[i % activities.length].description} for ${customer.name}`,
         entityType: "CUSTOMER",
         entityId: customer.id,
-        description: `${activities[i % activities.length]} for ${customer.name}`,
         metadata: {
           source: "seed",
         },
