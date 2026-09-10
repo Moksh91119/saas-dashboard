@@ -7,6 +7,7 @@ import planRoutes from "./routes/plan.routes.js";
 import subscriptionRoutes from "./routes/subscription.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/plans", planRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/activity", activityRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/api/health", async (_req, res) => {
   try {
