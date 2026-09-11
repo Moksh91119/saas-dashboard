@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "./generated/prisma/client.js";
+import { hashPassword } from "./utils/password.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -47,12 +48,15 @@ async function main() {
   // Users
   // --------------------------------------------------
 
+  const seededPassword = "saasflow-dev-password";
+  const seededPasswordHash = await hashPassword(seededPassword);
+
   const admin = await prisma.user.create({
     data: {
       organizationId: organization.id,
       name: "Alex Morgan",
       email: "alex@saasflow.dev",
-      passwordHash: "development-only-password-hash",
+      passwordHash: seededPasswordHash,
       role: "ADMIN",
       preferences: {
         theme: "light",
@@ -66,7 +70,7 @@ async function main() {
       organizationId: organization.id,
       name: "Jordan Lee",
       email: "jordan@saasflow.dev",
-      passwordHash: "development-only-password-hash",
+      passwordHash: seededPasswordHash,
       role: "MEMBER",
       preferences: {
         theme: "dark",

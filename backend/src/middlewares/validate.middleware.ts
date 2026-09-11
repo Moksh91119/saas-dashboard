@@ -38,7 +38,12 @@ export function validateQuery(schema: ZodType) {
       return;
     }
 
-    req.query = result.data as Request["query"];
+    Object.defineProperty(req, "query", {
+      value: result.data,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
     next();
   };
 }
