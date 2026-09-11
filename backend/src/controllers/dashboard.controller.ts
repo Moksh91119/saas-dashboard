@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import {
   getDashboardOverview,
   getCustomerTrend,
+  getChurnAnalytics,
   getPlanAnalytics,
   getRevenueTrend,
   getSubscriptionAnalytics,
@@ -36,13 +37,19 @@ export async function getAnalytics(req: Request, res: Response) {
       12,
     );
 
-    const [revenueTrend, customerTrend, planAnalytics, subscriptionAnalytics] =
-      await Promise.all([
-        getRevenueTrend(organizationId, months),
-        getCustomerTrend(organizationId, months),
-        getPlanAnalytics(organizationId),
-        getSubscriptionAnalytics(organizationId),
-      ]);
+    const [
+      revenueTrend,
+      customerTrend,
+      planAnalytics,
+      subscriptionAnalytics,
+      churnAnalytics,
+    ] = await Promise.all([
+      getRevenueTrend(organizationId, months),
+      getCustomerTrend(organizationId, months),
+      getPlanAnalytics(organizationId),
+      getSubscriptionAnalytics(organizationId),
+      getChurnAnalytics(organizationId, months),
+    ]);
 
     res.json({
       success: true,
@@ -51,6 +58,7 @@ export async function getAnalytics(req: Request, res: Response) {
         customerTrend,
         planAnalytics,
         subscriptionAnalytics,
+        churnAnalytics,
       },
     });
   } catch (error) {

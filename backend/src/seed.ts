@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "./generated/prisma/client.js";
+import { Prisma, PrismaClient } from "./generated/prisma/client.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -226,7 +226,9 @@ async function main() {
         companyName: data.companyName,
         country: data.country,
         status: data.status,
-        joinedAt: new Date(Date.now() - data.daysAgo * 24 * 60 * 60 * 1000),
+        joinedAt: new Date(
+          `2026-${String(Math.max(1, 9 - Math.floor(data.daysAgo / 45))).padStart(2, "0")}-15T12:00:00Z`,
+        ),
       },
     });
 
@@ -237,77 +239,87 @@ async function main() {
   // Subscriptions
   // --------------------------------------------------
 
-  const now = new Date();
+  const now = new Date("2026-09-11T12:00:00Z");
 
   const subscriptions = [
     {
       customer: customers[0],
       plan: growthPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-04-03T12:00:00Z"),
     },
     {
       customer: customers[1],
-      plan: starterPlan,
+      plan: growthPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-05-08T12:00:00Z"),
     },
     {
       customer: customers[2],
       plan: scalePlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-05-18T12:00:00Z"),
     },
     {
       customer: customers[3],
       plan: growthPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-06-06T12:00:00Z"),
     },
     {
       customer: customers[4],
       plan: starterPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-06-21T12:00:00Z"),
     },
     {
       customer: customers[5],
       plan: growthPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-07-02T12:00:00Z"),
     },
     {
       customer: customers[6],
       plan: scalePlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-07-19T12:00:00Z"),
     },
     {
       customer: customers[7],
       plan: starterPlan,
       status: "TRIAL" as const,
+      startedAt: new Date("2026-08-01T12:00:00Z"),
     },
     {
       customer: customers[8],
       plan: growthPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-08-09T12:00:00Z"),
     },
     {
       customer: customers[9],
       plan: starterPlan,
       status: "ACTIVE" as const,
+      startedAt: new Date("2026-08-18T12:00:00Z"),
     },
     {
       customer: customers[10],
       plan: growthPlan,
       status: "PAST_DUE" as const,
+      startedAt: new Date("2026-08-25T12:00:00Z"),
     },
     {
       customer: customers[11],
       plan: starterPlan,
       status: "CANCELLED" as const,
+      startedAt: new Date("2026-04-22T12:00:00Z"),
     },
   ];
 
   const createdSubscriptions = [];
 
   for (const data of subscriptions) {
-    const startedAt = new Date(
-      now.getTime() - Math.floor(Math.random() * 150) * 24 * 60 * 60 * 1000,
-    );
+    const startedAt = data.startedAt;
 
     const currentPeriodStart = new Date(startedAt);
     const currentPeriodEnd = new Date(startedAt);
@@ -323,37 +335,107 @@ async function main() {
         currentPeriodStart,
         currentPeriodEnd,
         cancelledAt:
-          data.status === "CANCELLED"
-            ? new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000)
-            : null,
+          data.status === "CANCELLED" ? new Date("2026-08-20T12:00:00Z") : null,
         endedAt:
-          data.status === "CANCELLED"
-            ? new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
-            : null,
+          data.status === "CANCELLED" ? new Date("2026-08-20T12:00:00Z") : null,
       },
     });
 
     createdSubscriptions.push(subscription);
-
-    await prisma.subscriptionEvent.create({
-      data: {
-        subscriptionId: subscription.id,
-        userId: admin.id,
-        eventType: "CREATED",
-        toPlanId: data.plan.id,
-        toStatus: data.status,
-        metadata: {
-          source: "seed",
-        },
-      },
-    });
   }
+
+  const subscriptionEvents: Prisma.SubscriptionEventCreateManyInput[] =
+    createdSubscriptions.map((subscription) => ({
+      subscriptionId: subscription.id,
+      userId: admin.id,
+      eventType: "CREATED" as const,
+      toPlanId: subscription.planId,
+      toStatus: subscription.status,
+      metadata: {
+        source: "seed",
+      },
+      createdAt: subscription.startedAt,
+    }));
+
+  subscriptionEvents.push(
+    {
+      subscriptionId: createdSubscriptions[1].id,
+      userId: admin.id,
+      eventType: "PLAN_CHANGED" as const,
+      fromPlanId: starterPlan.id,
+      toPlanId: growthPlan.id,
+      createdAt: new Date("2026-06-15T12:00:00Z"),
+    },
+    {
+      subscriptionId: createdSubscriptions[2].id,
+      userId: admin.id,
+      eventType: "PLAN_CHANGED" as const,
+      fromPlanId: growthPlan.id,
+      toPlanId: scalePlan.id,
+      createdAt: new Date("2026-07-10T12:00:00Z"),
+    },
+    {
+      subscriptionId: createdSubscriptions[11].id,
+      userId: admin.id,
+      eventType: "CANCELLED" as const,
+      fromStatus: "ACTIVE" as const,
+      toStatus: "CANCELLED" as const,
+      createdAt: new Date("2026-08-20T12:00:00Z"),
+    },
+  );
+
+  await prisma.subscriptionEvent.createMany({
+    data: subscriptionEvents,
+  });
 
   // --------------------------------------------------
   // Transactions
   // --------------------------------------------------
 
-  for (let i = 0; i < 40; i++) {
+  const transactionDates = [
+    "2026-04-05",
+    "2026-04-18",
+    "2026-04-27",
+    "2026-05-04",
+    "2026-05-16",
+    "2026-05-29",
+    "2026-06-03",
+    "2026-06-14",
+    "2026-06-26",
+    "2026-07-02",
+    "2026-07-11",
+    "2026-07-23",
+    "2026-08-01",
+    "2026-08-08",
+    "2026-08-15",
+    "2026-08-22",
+    "2026-08-29",
+    "2026-09-01",
+    "2026-09-03",
+    "2026-09-05",
+    "2026-04-09",
+    "2026-04-22",
+    "2026-05-08",
+    "2026-05-21",
+    "2026-06-08",
+    "2026-06-19",
+    "2026-07-07",
+    "2026-07-18",
+    "2026-07-29",
+    "2026-08-05",
+    "2026-08-12",
+    "2026-08-19",
+    "2026-08-26",
+    "2026-09-02",
+    "2026-09-04",
+    "2026-04-14",
+    "2026-05-12",
+    "2026-06-12",
+    "2026-07-14",
+    "2026-08-14",
+  ];
+
+  for (let i = 0; i < transactionDates.length; i++) {
     const subscriptionIndex = i % createdSubscriptions.length;
     const subscription = createdSubscriptions[subscriptionIndex];
 
@@ -364,9 +446,7 @@ async function main() {
           ? growthPlan
           : scalePlan;
 
-    const occurredAt = new Date(
-      now.getTime() - Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000,
-    );
+    const occurredAt = new Date(`${transactionDates[i]}T12:00:00Z`);
 
     await prisma.transaction.create({
       data: {
@@ -376,7 +456,8 @@ async function main() {
         amount: plan.price,
         currency: "USD",
         type: "CHARGE",
-        status: i % 13 === 0 ? "FAILED" : "SUCCEEDED",
+        status:
+          i % 13 === 0 ? "FAILED" : i % 11 === 0 ? "PENDING" : "SUCCEEDED",
         description: `${plan.name} subscription payment`,
         occurredAt,
       },

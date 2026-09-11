@@ -1,5 +1,9 @@
 import prisma from "../config/prisma.js";
 
+function getMonthKey(date: Date) {
+  return date.toISOString().slice(0, 7);
+}
+
 export async function getDashboardOverview(organizationId: string) {
   const organization = await prisma.organization.findUnique({
     where: {
@@ -308,4 +312,114 @@ export async function getSubscriptionAnalytics(organizationId: string) {
     status: item.status,
     count: item._count.id,
   }));
+}
+
+export async function getChurnAnalytics(organizationId: string, months = 6) {
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: organizationId,
+    },
+  });
+
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
+
+  const now = new Date();
+  const startDate = new Date(
+    now.getFullYear(),
+    now.getMonth() - (months - 1),
+    1,
+  );
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const subscriptionEvents = await prisma.subscriptionEvent.findMany({
+    where: {
+      subscription: {
+        organizationId,
+      },
+      createdAt: {
+        lt: endDate,
+      },
+    },
+    select: {
+      subscriptionId: true,
+      eventType: true,
+      toStatus: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const activeSubscriptions = new Set<string>();
+  let eventIndex = 0;
+  const result = [];
+
+  for (let i = 0; i < months; i++) {
+    const monthStart = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth() + i,
+      1,
+    );
+    const nextMonth = new Date(
+      monthStart.getFullYear(),
+      monthStart.getMonth() + 1,
+      1,
+    );
+
+    while (
+      eventIndex < subscriptionEvents.length &&
+      subscriptionEvents[eventIndex].createdAt < monthStart
+    ) {
+      const event = subscriptionEvents[eventIndex];
+
+      if (event.eventType === "CREATED" || event.eventType === "REACTIVATED") {
+        activeSubscriptions.add(event.subscriptionId);
+      } else if (
+        event.eventType === "CANCELLED" ||
+        (event.eventType === "STATUS_CHANGED" && event.toStatus === "CANCELLED")
+      ) {
+        activeSubscriptions.delete(event.subscriptionId);
+      }
+
+      eventIndex += 1;
+    }
+
+    const startingActive = activeSubscriptions.size;
+    let cancelledDuringMonth = 0;
+
+    while (
+      eventIndex < subscriptionEvents.length &&
+      subscriptionEvents[eventIndex].createdAt < nextMonth
+    ) {
+      const event = subscriptionEvents[eventIndex];
+
+      if (event.eventType === "CREATED" || event.eventType === "REACTIVATED") {
+        activeSubscriptions.add(event.subscriptionId);
+      } else if (
+        event.eventType === "CANCELLED" ||
+        (event.eventType === "STATUS_CHANGED" && event.toStatus === "CANCELLED")
+      ) {
+        if (activeSubscriptions.delete(event.subscriptionId)) {
+          cancelledDuringMonth += 1;
+        }
+      }
+
+      eventIndex += 1;
+    }
+
+    const churnRate =
+      startingActive === 0 ? 0 : (cancelledDuringMonth / startingActive) * 100;
+
+    result.push({
+      month: getMonthKey(monthStart),
+      startingActive,
+      cancelledDuringMonth,
+      churnRate: Number(churnRate.toFixed(2)),
+    });
+  }
+
+  return result;
 }
