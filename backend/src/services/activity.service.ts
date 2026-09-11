@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 export async function getActivities(
   organizationId: string,
@@ -20,7 +21,7 @@ export async function getActivities(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const { page, limit, action, entityType, userId } = params;
@@ -103,7 +104,7 @@ export async function getActivityById(organizationId: string, id: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const activity = await prisma.activityLog.findFirst({
@@ -124,7 +125,7 @@ export async function getActivityById(organizationId: string, id: string) {
   });
 
   if (!activity) {
-    throw new Error("Activity not found");
+    throw new AppError("Activity not found", 404);
   }
 
   return activity;

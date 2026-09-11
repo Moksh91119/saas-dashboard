@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.js";
 import { comparePassword, hashPassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 export async function registerUser(data: {
   organizationName: string;
@@ -18,7 +19,7 @@ export async function registerUser(data: {
   });
 
   if (existingOrganization) {
-    throw new Error("Organization slug already exists");
+    throw new AppError("Organization slug already exists", 400);
   }
 
   const passwordHash = await hashPassword(data.password);
@@ -84,13 +85,13 @@ export async function loginUser(data: { email: string; password: string }) {
   });
 
   if (!user) {
-    throw new Error("Invalid email or password");
+    throw new AppError("Invalid email or password", 401);
   }
 
   const passwordValid = await comparePassword(data.password, user.passwordHash);
 
   if (!passwordValid) {
-    throw new Error("Invalid email or password");
+    throw new AppError("Invalid email or password", 401);
   }
 
   await prisma.user.update({
@@ -137,7 +138,7 @@ export async function getCurrentUser(userId: string) {
   });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError("User not found", 404);
   }
 
   return {

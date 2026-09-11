@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 function getMonthKey(date: Date) {
   return date.toISOString().slice(0, 7);
@@ -12,7 +13,7 @@ export async function getDashboardOverview(organizationId: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const [
@@ -138,7 +139,7 @@ export async function getRevenueTrend(organizationId: string, months = 6) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const now = new Date();
@@ -207,7 +208,7 @@ export async function getCustomerTrend(organizationId: string, months = 6) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const now = new Date();
@@ -253,7 +254,7 @@ export async function getPlanAnalytics(organizationId: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const plans = await prisma.plan.findMany({
@@ -295,7 +296,7 @@ export async function getSubscriptionAnalytics(organizationId: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const statuses = await prisma.subscription.groupBy({
@@ -322,7 +323,7 @@ export async function getChurnAnalytics(organizationId: string, months = 6) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const now = new Date();

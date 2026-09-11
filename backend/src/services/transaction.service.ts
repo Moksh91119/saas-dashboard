@@ -167,7 +167,7 @@ export async function getTransactionById(organizationId: string, id: string) {
   });
 
   if (!transaction) {
-    throw new Error("Transaction not found");
+    throw new AppError("Transaction not found", 404);
   }
 
   return transaction;

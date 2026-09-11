@@ -28,7 +28,6 @@ app.use("/api/subscriptions", authenticate, subscriptionRoutes);
 app.use("/api/transactions", authenticate, transactionRoutes);
 app.use("/api/activity", authenticate, activityRoutes);
 app.use("/api/auth", authRoutes);
-app.use(errorHandler);
 
 app.get("/api/health", async (_req, res) => {
   try {
@@ -50,3 +49,5 @@ app.get("/api/health", async (_req, res) => {
 });
 
 export default app;
+
+app.use(errorHandler);
