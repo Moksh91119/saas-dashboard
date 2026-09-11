@@ -5,6 +5,7 @@ import {
   getTransactionById,
   getTransactions,
 } from "../services/transaction.service.js";
+import { createActivityLog } from "../services/activity-log.service.js";
 
 function getId(req: Request, res: Response): string | null {
   const { id } = req.params;
@@ -165,6 +166,21 @@ export async function createTransactionController(req: Request, res: Response) {
     res.status(201).json({
       success: true,
       data: transaction,
+    });
+
+    await createActivityLog({
+      organizationId,
+      userId: req.user!.id,
+      action: "TRANSACTION_CREATED",
+      entityType: "TRANSACTION",
+      entityId: transaction.id,
+      description: `Transaction ${transaction.id} was created`,
+      metadata: {
+        amount: transaction.amount,
+        currency: transaction.currency,
+        type: transaction.type,
+        status: transaction.status,
+      },
     });
   } catch (error) {
     const message =

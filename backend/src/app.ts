@@ -9,6 +9,7 @@ import transactionRoutes from "./routes/transaction.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import { authenticate } from "./middlewares/auth.middleware.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/subscriptions", authenticate, subscriptionRoutes);
 app.use("/api/transactions", authenticate, transactionRoutes);
 app.use("/api/activity", authenticate, activityRoutes);
 app.use("/api/auth", authRoutes);
+app.use(errorHandler);
 
 app.get("/api/health", async (_req, res) => {
   try {

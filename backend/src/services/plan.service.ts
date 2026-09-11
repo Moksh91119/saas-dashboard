@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 export async function getPlans(organizationId: string) {
   const organization = await prisma.organization.findUnique({
@@ -11,7 +12,7 @@ export async function getPlans(organizationId: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   return prisma.plan.findMany({
@@ -42,7 +43,7 @@ export async function getPlanById(organizationId: string, id: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const plan = await prisma.plan.findFirst({
@@ -60,7 +61,7 @@ export async function getPlanById(organizationId: string, id: string) {
   });
 
   if (!plan) {
-    throw new Error("Plan not found");
+    throw new AppError("Plan not found", 404);
   }
 
   return plan;
@@ -86,7 +87,7 @@ export async function createPlan(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const existingPlan = await prisma.plan.findFirst({
@@ -97,7 +98,7 @@ export async function createPlan(
   });
 
   if (existingPlan) {
-    throw new Error("A plan with this slug already exists");
+    throw new AppError("A plan with this slug already exists", 409);
   }
 
   return prisma.plan.create({
@@ -135,7 +136,7 @@ export async function updatePlan(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const plan = await prisma.plan.findFirst({
@@ -146,7 +147,7 @@ export async function updatePlan(
   });
 
   if (!plan) {
-    throw new Error("Plan not found");
+    throw new AppError("Plan not found", 404);
   }
 
   if (data.slug && data.slug !== plan.slug) {
@@ -161,7 +162,7 @@ export async function updatePlan(
     });
 
     if (existingPlan) {
-      throw new Error("A plan with this slug already exists");
+      throw new AppError("A plan with this slug already exists", 409);
     }
   }
 
@@ -184,7 +185,7 @@ export async function deactivatePlan(organizationId: string, id: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const plan = await prisma.plan.findFirst({
@@ -195,7 +196,7 @@ export async function deactivatePlan(organizationId: string, id: string) {
   });
 
   if (!plan) {
-    throw new Error("Plan not found");
+    throw new AppError("Plan not found", 404);
   }
 
   return prisma.plan.update({

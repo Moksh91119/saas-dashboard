@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 export async function getSubscriptions(organizationId: string) {
   const organization = await prisma.organization.findUnique({
@@ -11,7 +12,7 @@ export async function getSubscriptions(organizationId: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   return prisma.subscription.findMany({
@@ -53,7 +54,7 @@ export async function getSubscriptionById(organizationId: string, id: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const subscription = await prisma.subscription.findFirst({
@@ -88,7 +89,7 @@ export async function getSubscriptionById(organizationId: string, id: string) {
   });
 
   if (!subscription) {
-    throw new Error("Subscription not found");
+    throw new AppError("Subscription not found", 404);
   }
 
   return subscription;
@@ -112,7 +113,7 @@ export async function createSubscription(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const [customer, plan, existingSubscription] = await Promise.all([
@@ -144,15 +145,15 @@ export async function createSubscription(
   ]);
 
   if (!customer) {
-    throw new Error("Customer not found");
+    throw new AppError("Customer not found", 404);
   }
 
   if (!plan) {
-    throw new Error("Active plan not found");
+    throw new AppError("Active plan not found", 404);
   }
 
   if (existingSubscription) {
-    throw new Error("Customer already has an active subscription");
+    throw new AppError("Customer already has an active subscription", 409);
   }
 
   const startedAt = new Date();
@@ -214,7 +215,7 @@ export async function changeSubscriptionPlan(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const subscription = await prisma.subscription.findFirst({
@@ -228,7 +229,14 @@ export async function changeSubscriptionPlan(
   });
 
   if (!subscription) {
-    throw new Error("Subscription not found");
+    throw new AppError("Subscription not found", 404);
+  }
+
+  if (subscription.status === "CANCELLED") {
+    throw new AppError(
+      "Cannot change the plan of a cancelled subscription",
+      409,
+    );
   }
 
   const newPlan = await prisma.plan.findFirst({
@@ -240,11 +248,11 @@ export async function changeSubscriptionPlan(
   });
 
   if (!newPlan) {
-    throw new Error("New plan not found");
+    throw new AppError("New active plan not found", 404);
   }
 
   if (subscription.planId === newPlan.id) {
-    throw new Error("Subscription is already on this plan");
+    throw new AppError("Subscription is already on this plan", 409);
   }
 
   return prisma.$transaction(async (tx) => {
@@ -290,7 +298,7 @@ export async function cancelSubscription(organizationId: string, id: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const subscription = await prisma.subscription.findFirst({
@@ -301,11 +309,11 @@ export async function cancelSubscription(organizationId: string, id: string) {
   });
 
   if (!subscription) {
-    throw new Error("Subscription not found");
+    throw new AppError("Subscription not found", 404);
   }
 
   if (subscription.status === "CANCELLED") {
-    throw new Error("Subscription is already cancelled");
+    throw new AppError("Subscription is already cancelled", 409);
   }
 
   const cancelledAt = new Date();

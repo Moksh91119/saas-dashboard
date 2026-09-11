@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 export async function getTransactions(
   organizationId: string,
@@ -21,7 +22,7 @@ export async function getTransactions(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const { page, limit, status, type, customerId, search } = params;
@@ -145,7 +146,7 @@ export async function getTransactionById(organizationId: string, id: string) {
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
   }
 
   const transaction = await prisma.transaction.findFirst({
@@ -195,7 +196,11 @@ export async function createTransaction(
   });
 
   if (!organization) {
-    throw new Error("Organization not found");
+    throw new AppError("Organization not found", 404);
+  }
+
+  if (data.amount < 0) {
+    throw new AppError("Transaction amount cannot be negative", 400);
   }
 
   const customer = await prisma.customer.findFirst({
@@ -207,7 +212,7 @@ export async function createTransaction(
   });
 
   if (!customer) {
-    throw new Error("Customer not found");
+    throw new AppError("Customer not found", 404);
   }
 
   if (data.subscriptionId) {
@@ -220,7 +225,10 @@ export async function createTransaction(
     });
 
     if (!subscription) {
-      throw new Error("Subscription not found or does not belong to customer");
+      throw new AppError(
+        "Subscription not found or does not belong to customer",
+        404,
+      );
     }
   }
 

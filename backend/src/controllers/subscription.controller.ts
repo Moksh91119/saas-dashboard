@@ -7,6 +7,7 @@ import {
   getSubscriptionById,
   getSubscriptions,
 } from "../services/subscription.service.js";
+import { createActivityLog } from "../services/activity-log.service.js";
 
 function getId(req: Request, res: Response): string | null {
   const { id } = req.params;
@@ -74,6 +75,7 @@ export async function createSubscriptionController(
 ) {
   try {
     const organizationId = req.user!.organizationId;
+    const userId = req.user!.id;
     const { customerId, planId, status } = req.body;
 
     if (!customerId || !planId) {
@@ -104,6 +106,14 @@ export async function createSubscriptionController(
       success: true,
       data: subscription,
     });
+    await createActivityLog({
+      organizationId,
+      userId,
+      action: "SUBSCRIPTION_CREATED",
+      entityType: "SUBSCRIPTION",
+      entityId: subscription.id,
+      description: `Subscription ${subscription.id} was created`,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to create subscription";
@@ -127,6 +137,7 @@ export async function changeSubscriptionPlanController(
 ) {
   try {
     const organizationId = req.user!.organizationId;
+    const userId = req.user!.id;
     const id = getId(req, res);
 
     if (!id) {
@@ -144,6 +155,9 @@ export async function changeSubscriptionPlanController(
       return;
     }
 
+    const currentSubscription = await getSubscriptionById(organizationId, id);
+    const previousPlanId = currentSubscription.planId;
+
     const subscription = await changeSubscriptionPlan(
       organizationId,
       id,
@@ -153,6 +167,19 @@ export async function changeSubscriptionPlanController(
     res.json({
       success: true,
       data: subscription,
+    });
+
+    await createActivityLog({
+      organizationId,
+      userId,
+      action: "SUBSCRIPTION_PLAN_CHANGED",
+      entityType: "SUBSCRIPTION",
+      entityId: subscription.id,
+      description: `Subscription ${subscription.id} plan changed to ${planId}`,
+      metadata: {
+        previousPlanId,
+        newPlanId: planId,
+      },
     });
   } catch (error) {
     const message =
@@ -178,6 +205,7 @@ export async function cancelSubscriptionController(
 ) {
   try {
     const organizationId = req.user!.organizationId;
+    const userId = req.user!.id;
     const id = getId(req, res);
 
     if (!id) {
@@ -189,6 +217,18 @@ export async function cancelSubscriptionController(
     res.json({
       success: true,
       data: subscription,
+    });
+
+    await createActivityLog({
+      organizationId,
+      userId,
+      action: "SUBSCRIPTION_CANCELLED",
+      entityType: "SUBSCRIPTION",
+      entityId: subscription.id,
+      description: `Subscription ${subscription.id} was cancelled`,
+      metadata: {
+        cancelledAt: subscription.cancelledAt,
+      },
     });
   } catch (error) {
     const message =

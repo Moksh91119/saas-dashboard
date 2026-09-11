@@ -7,6 +7,7 @@ import {
   getCustomers,
   updateCustomer,
 } from "../services/customer.service.js";
+import { createActivityLog } from "../services/activity-log.service.js";
 
 function getCustomerId(req: Request, res: Response): string | null {
   const { id } = req.params;
@@ -106,6 +107,8 @@ export async function getCustomerController(req: Request, res: Response) {
 
 export async function createCustomerController(req: Request, res: Response) {
   try {
+    const userId = req.user!.id;
+    const organizationId = req.user!.organizationId;
     const { name, email, companyName, country } = req.body;
 
     if (!name || !email) {
@@ -116,7 +119,7 @@ export async function createCustomerController(req: Request, res: Response) {
       return;
     }
 
-    const customer = await createCustomer(req.user!.organizationId, {
+    const customer = await createCustomer(organizationId, {
       name,
       email,
       companyName,
@@ -126,6 +129,15 @@ export async function createCustomerController(req: Request, res: Response) {
     res.status(201).json({
       success: true,
       data: customer,
+    });
+
+    await createActivityLog({
+      organizationId,
+      userId,
+      action: "CUSTOMER_CREATED",
+      entityType: "CUSTOMER",
+      entityId: customer.id,
+      description: `Customer ${customer.name} was created`,
     });
   } catch (error) {
     const message =
@@ -142,21 +154,28 @@ export async function createCustomerController(req: Request, res: Response) {
 
 export async function updateCustomerController(req: Request, res: Response) {
   try {
+    const userId = req.user!.id;
+    const organizationId = req.user!.organizationId;
     const id = getCustomerId(req, res);
 
     if (!id) {
       return;
     }
 
-    const customer = await updateCustomer(
-      req.user!.organizationId,
-      id,
-      req.body,
-    );
+    const customer = await updateCustomer(organizationId, id, req.body);
 
     res.json({
       success: true,
       data: customer,
+    });
+
+    await createActivityLog({
+      organizationId,
+      userId,
+      action: "CUSTOMER_UPDATED",
+      entityType: "CUSTOMER",
+      entityId: customer.id,
+      description: `Customer ${customer.name} was updated`,
     });
   } catch (error) {
     const message =
@@ -178,15 +197,26 @@ export async function updateCustomerController(req: Request, res: Response) {
 
 export async function deleteCustomerController(req: Request, res: Response) {
   try {
+    const userId = req.user!.id;
+    const organizationId = req.user!.organizationId;
     const id = getCustomerId(req, res);
 
     if (!id) {
       return;
     }
+    const customer = await getCustomerById(organizationId, id);
 
-    await deleteCustomer(req.user!.organizationId, id);
+    await deleteCustomer(organizationId, id);
 
     res.status(204).send();
+    await createActivityLog({
+      organizationId,
+      userId,
+      action: "CUSTOMER_DELETED",
+      entityType: "CUSTOMER",
+      entityId: customer.id,
+      description: `Customer ${customer.name} was deactivated`,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to delete customer";

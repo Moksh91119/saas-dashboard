@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { AppError } from "../middlewares/error.middleware.js";
 
 export async function getCustomers(
   organizationId: string,
@@ -127,7 +128,7 @@ export async function getCustomerById(organizationId: string, id: string) {
   });
 
   if (!customer) {
-    throw new Error("Customer not found");
+    throw new AppError("Customer not found", 404);
   }
 
   return customer;
@@ -151,7 +152,7 @@ export async function createCustomer(
   });
 
   if (existingCustomer) {
-    throw new Error("A customer with this email already exists");
+    throw new AppError("A customer with this email already exists", 409);
   }
 
   return prisma.customer.create({
@@ -187,7 +188,7 @@ export async function updateCustomer(
   });
 
   if (!customer) {
-    throw new Error("Customer not found");
+    throw new AppError("Customer not found", 404);
   }
 
   if (data.email && data.email !== customer.email) {
@@ -203,7 +204,7 @@ export async function updateCustomer(
     });
 
     if (existingCustomer) {
-      throw new Error("A customer with this email already exists");
+      throw new AppError("A customer with this email already exists", 409);
     }
   }
 
@@ -225,7 +226,7 @@ export async function deleteCustomer(organizationId: string, id: string) {
   });
 
   if (!customer) {
-    throw new Error("Customer not found");
+    throw new AppError("Customer not found", 404);
   }
 
   return prisma.customer.update({
