@@ -35,7 +35,7 @@ app.get("/api/health", async (_req, res) => {
 
     res.json({
       status: "ok",
-      message: "SaaSFlow API is running",
+      message: "API is running",
       database: "connected",
     });
   } catch (error) {
