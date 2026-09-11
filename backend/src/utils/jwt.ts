@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 
 import type { AuthUser } from "../types/auth.js";
+import { env } from "../config/env.js";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = env["JWT_SECRET"];
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not defined");
