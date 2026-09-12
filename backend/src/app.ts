@@ -15,7 +15,11 @@ import helmet from "helmet";
 const app = express();
 app.use(helmet());
 app.use(express.json({ limit: "1mb" }));
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://saas-dashboard-red-psi.vercel.app",
+];
 app.use(
   cors({
     origin: allowedOrigins,
