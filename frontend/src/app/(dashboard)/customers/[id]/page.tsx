@@ -10,7 +10,6 @@ import {
   Loader2,
   Mail,
   MapPin,
-  Pencil,
   User,
 } from "lucide-react";
 import { use } from "react";
