@@ -15,9 +15,10 @@ import helmet from "helmet";
 const app = express();
 app.use(helmet());
 app.use(express.json({ limit: "1mb" }));
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
   }),
 );
 
