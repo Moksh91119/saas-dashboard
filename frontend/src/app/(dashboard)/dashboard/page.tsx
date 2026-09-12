@@ -30,6 +30,7 @@ import {
   useDashboardAnalytics,
   useDashboardOverview,
 } from "@/hooks/use-dashboard";
+import Link from "next/link";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -444,9 +445,10 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             {recentTransactions.slice(0, 6).map((transaction) => (
-              <div
+              <Link
                 key={transaction.id}
-                className="flex items-center justify-between gap-4"
+                href={`/transactions/${transaction.id}`}
+                className="flex items-center justify-between gap-4 rounded-lg p-2 -m-2 hover:bg-slate-50"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-900">
@@ -472,7 +474,7 @@ export default function DashboardPage() {
                     {transaction.status}
                   </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -484,7 +486,11 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             {recentActivity.slice(0, 6).map((activity) => (
-              <div key={activity.id} className="flex gap-3">
+              <Link
+                key={activity.id}
+                href={`/activity/${activity.id}`}
+                className="flex gap-3 rounded-lg p-2 -m-2 hover:bg-slate-50"
+              >
                 <div className="mt-0.5 rounded-full bg-slate-100 p-2">
                   {activity.action.includes("CREATED") ? (
                     <ArrowUpRight className="h-3.5 w-3.5 text-slate-600" />
@@ -503,7 +509,7 @@ export default function DashboardPage() {
                     {formatDate(activity.createdAt)}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
